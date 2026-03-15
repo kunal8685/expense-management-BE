@@ -13,17 +13,79 @@ datasource db {
 }
 
 
-model User { 
-  id    Int     @id @default(autoincrement()) 
-  email String  @unique
-  name  String?
-  posts Post[]
-} 
-model Post { 
-  id        Int     @id @default(autoincrement()) 
-  title     String
-  content   String?
-  published Boolean @default(false) 
-  author    User    @relation(fields: [authorId], references: [id]) 
-  authorId  Int
-} 
+enum Role {
+  ADMIN
+  USER
+  NGO
+}
+
+enum TransactionType {
+  DONATION
+  EXPENSE
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+  role        Role     @default(USER)
+  createdAt   DateTime @default(now())
+
+  donations   Donation[]
+}
+
+model NGO {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+  description String?
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  donations   Donation[]
+  expenses    Expense[]
+}
+
+model Donation {
+  id          String   @id @default(uuid())
+  amount      Float
+  message     String?
+  createdAt   DateTime @default(now())
+
+  donorId     String
+  donor       User     @relation(fields: [donorId], references: [id])
+
+  ngoId       String
+  ngo         NGO      @relation(fields: [ngoId], references: [id])
+
+  transaction TransactionLog?
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  amount      Float
+  proofUrl    String?
+  createdAt   DateTime @default(now())
+
+  ngoId       String
+  ngo         NGO      @relation(fields: [ngoId], references: [id])
+
+  transaction TransactionLog?
+}
+
+model TransactionLog {
+  id          String   @id @default(uuid())
+  amount      Float
+  type        TransactionType
+  createdAt   DateTime @default(now())
+
+  donationId  String? @unique
+  donation    Donation? @relation(fields: [donationId], references: [id])
+
+  expenseId   String? @unique
+  expense     Expense?  @relation(fields: [expenseId], references: [id])
+}
