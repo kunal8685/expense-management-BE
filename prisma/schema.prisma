@@ -13,26 +13,26 @@ datasource db {
 }
 
 
-enum Role {
-  ADMIN
-  USER
-  NGO
-}
 
 enum TransactionType {
   DONATION
   EXPENSE
 }
 
-model User {
-  id          String   @id @default(uuid())
-  name        String
-  email       String   @unique
-  password    String
-  role        Role     @default(USER)
-  createdAt   DateTime @default(now())
+model Role {
+  id   String @id @default(uuid())
+  name String @unique
+  users User[]
+}
 
-  donations   Donation[]
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+  roleId   String
+  role     Role   @relation(fields:[roleId], references:[id])
+  donations Donation[]
 }
 
 model NGO {
