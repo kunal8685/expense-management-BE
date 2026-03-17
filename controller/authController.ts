@@ -49,7 +49,6 @@ export const register = async (
   }
 };
 
-/* ---------------- LOGIN ---------------- */
 
 export const login = async (
   req: Request,
