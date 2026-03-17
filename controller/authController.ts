@@ -3,43 +3,34 @@ import type { ErrorResponse, SuccessResponse } from "../types/apiRsponse";
 import { prisma } from "../utils/prismaClient";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { userSelector } from "../prisma/selectors/auth";
+import type { registerRequestDto } from "../dto/auth.dto";
+import { createUser } from "../services/auth.services";
+
 
 export const register = async (
   req: Request,
   res: Response<ErrorResponse | SuccessResponse<any>>,
 ) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role }:registerRequestDto = req.body;
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "User with this email already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        roleId: role,
-      },
-    });
+    const user = await createUser(name, email, role, password);
 
     return res.status(201).json({
       success: true,
       message: "User created successfully",
       data: user,
     });
-  } catch (error) {
+  } catch (error:any) {
     console.error("REGISTER ERROR:", error);
+
+    if(error.message == "USER_EXISTS"){
+      return res.status(409).json({
+        success: false,
+        message: "User with this email already exists",
+      });
+    }
 
     return res.status(500).json({
       success: false,
